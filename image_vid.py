@@ -132,11 +132,12 @@ def compare_embeddings(embeddings):
                     if image_file in processed_images:
                         continue
 
-                    # Calculate cosine similarity between the embeddings
+                    # Calc
+                    # ulate cosine similarity between the embeddings
                     similarity = cosine_similarity([embedding], [video_embedding])[0][0]
 
                     # Set a threshold for similarity (adjust as needed)
-                    threshold = 0.5
+                    threshold = 0.47
 
                     if similarity >= threshold:
                         print(f"Match found in {video_file} for image: {image_file} with similarity: {similarity}")
