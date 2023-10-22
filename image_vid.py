@@ -5,10 +5,16 @@ from sklearn.metrics.pairwise import cosine_similarity
 from insightface.app import FaceAnalysis
 import shutil
 # Define directories
-new_images_dir = input("Enter a new value for images_dir: ")
-new_vid_dir = input("Enter a new value for vid_dir: ")
+new_images_dir = input("Enter a new value for images_dir(the def is C:\python\images ): ")
+new_vid_dir = input("Enter a new value for vid_dir(the def is "+r"C:\python\vids ):")
 images_dir = new_images_dir if new_images_dir else r"C:\python\images"
 vid_dir = new_vid_dir if new_vid_dir else r"C:\python\vids"
+existingdir=True
+if(not os.path.exists(images_dir) or not os.path.exists(vid_dir)):
+    existingdir=False
+
+
+ 
 
 def extract_embedding(embedder, face_data):
     try:
@@ -34,7 +40,7 @@ def load_model_for_embedding():
 
 def create_output_directory(image_file,path):
     image_name = os.path.splitext(image_file)[0]
-    if(path!="C:\\python\\archive"):
+    if(path!=images_dir+"\\archive"):
         output_dir = os.path.join(path, image_name)
     else:
         output_dir=path
@@ -50,10 +56,11 @@ def process_images(images_dir):
 
     if embedder is None:
         return
+    #subfolder_path, _,
 
-    for subfolder_path, _, image_files in os.walk(images_dir):
-        for image_file in image_files:
-            image_path = os.path.join(subfolder_path, image_file)
+    for image_files in os.listdir(images_dir):
+        if os.path.isfile(os.path.join(images_dir, image_files)):
+            image_path = os.path.join(images_dir, image_files)
             img = cv2.imread(image_path)
             faces = embedder.get(img)
 
@@ -61,7 +68,7 @@ def process_images(images_dir):
                 for face in faces:
                     embedding = extract_embedding(embedder, face)
                     if embedding is not None:
-                        embeddings.append((embedding, image_file))
+                        embeddings.append((embedding, image_files))
 
     return embeddings
 def compare_embeddings_button(embeddings, video_path, embedder):
@@ -148,16 +155,18 @@ def compare_embeddings(embeddings):
                         
                         matched_image_path = os.path.join(output_dir, image_file)
                         image_path = os.path.join(images_dir, image_file)
-                        shutil.copy(image_path, matched_image_path)
+                        if(os.path.exists(image_path)):
+                         shutil.copy(image_path, matched_image_path)
                         
                         matched_video_path = os.path.join(output_dir, video_file)
                         shutil.copy(video_path, matched_video_path)
 
 
-                        output_dir = create_output_directory(image_file,r"C:\python\archive")
+                        output_dir = create_output_directory(image_file,images_dir+r"\archive")
                         matched_video_path = os.path.join(output_dir, image_file)
                         image_path = os.path.join(images_dir, image_file)
-                        shutil.move(image_path, matched_video_path)
+                        if(os.path.exists(image_path)):
+                         shutil.move(image_path, matched_video_path)
 
 
 
@@ -175,9 +184,11 @@ def compare_embeddings(embeddings):
 
 if __name__ == "__main__":
     # Load the embedding model
-    embedder = load_model_for_embedding()
+    if(existingdir==True):
+    
+     embedder = load_model_for_embedding()
 
-    if embedder:
+     if embedder:
         # embedding of images to pass to compare_embeddings
         embeddings = process_images(images_dir)  #  function to get embeddings
 
@@ -186,7 +197,11 @@ if __name__ == "__main__":
             message = "Video processing complete."
         else:
             message = "No embeddings found."
-    else:
+     else:
         message = "Failed to load the embedding model."
+    else:
+        message = "the path doesn't exist,try again"
+
+        
 
     print(message)
